@@ -12,18 +12,16 @@
 - insert:
     - id: session-title-summary
       name: 'dsh-session-title-summary'
+      # If host core services are temporarily unavailable (for example during
+      # an interrupted install), defer this optional plugin instead of making
+      # the required host startup fatal. Loader re-evaluates this on remount.
+      disabled: !!js "!ctx.get('sessionTitle') || !ctx.get('sessions')"
       config:
-        # 每条人类消息后重新分析（all-prompts）或仅首条（first-prompt）
         cadence: all-prompts
-        # 标题格式：MMDD | 分类 | 主题；失败时回退 MMDD | 简短标题
         datePrefix: true
         timeZone: Asia/Shanghai
-        # 优先使用的内置分类
         builtinCategories: [功能, 设计, 整改, 优化, 发布, 分析, 文档]
-        # 初始自定义分类（运行中模型引入的新分类会动态追加到
-        # ~/.dsh/session-title-summary/categories.json）
         customCategories: [系统, 开发, 部署]
-        # 同义归并：模型说法 → 标准分类（先整词后包含匹配，按序生效）
         synonyms:
           - [系统部署, 发布]
           - [部署工作, 发布]
@@ -40,7 +38,6 @@
           - [接口说明整理, 文档]
           - [开发类, 开发]
           - [开发工作, 开发]
-        # 第一阶段本地快速判断：短首条消息命中关键词时跳过模型调用
         localFastPath: true
         fastPathKeywords:
           - [部署, 发布]
@@ -66,20 +63,14 @@
           - [评估, 分析]
           - [对比, 分析]
         fastPathMaxChars: 60
-        # 置信度阈值：低于则回退两段式标题
         minConfidence: 0.6
         topicMaxChars: 24
-        # 长会话窗口：首 N 条 + 尾 M 条
         windowFirst: 6
         windowLast: 12
-        # none | suffix（suffix 在标题尾部追加「 · 模型id」）
         modelTag: none
         maxInputBytes: 8192
         maxOutputTokens: 200
         timeoutMs: 60000
-        # 历史会话回填：激活后一次性扫描持久化会话（新到旧，上限 50 个），
-        # 跳过：已存活会话 / 用户手动命名 / 已是合法格式 / 子代理会话 /
-        # 事件数 < backfillMinEvents；其余经同一标题管线重命名并写回日志
         backfill: true
         backfillMaxSessions: 50
         backfillMinEvents: 3
@@ -87,6 +78,3 @@
         backfillStartupDelayMs: 15000
         backfillIncludeUserTitles: false
         backfillIncludeSubagents: false
-        # 可选固定标题模型路由（provider 与 model 必须成对；缺省跟随会话模型）
-        # provider: deepseek
-        # model: deepseek-chat
