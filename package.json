@@ -1,8 +1,7 @@
 {
-  "name": "@local/session-title-summary",
-  "description": "Summary session-title provider: renames the session with an LLM summary of the conversation, following the session's own model route",
+  "name": "dsh-session-title-summary",
+  "description": "Session-title provider for DeepSeek Harness: generates categorized MMDD | category | topic titles from the conversation, with history backfill and a management panel",
   "version": "1.7.1",
-  "private": true,
   "type": "module",
   "exports": {
     ".": "./index.js",
@@ -23,6 +22,11 @@
     "locale/*.json",
     "icon.svg"
   ],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "session-title"
+  ],
   "dependencies": {
     "@deepseek-ai/schemastery": "^3.18.4",
     "@deepseek-ai/dsh-session": "0.2.1-rc.5",
@@ -30,6 +34,14 @@
     "@deepseek-ai/dsh-session-title-llm": "0.2.1-rc.5"
   },
   "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/achievejia/session-title-summary.git"
+  },
+  "homepage": "https://github.com/achievejia/session-title-summary#readme",
+  "bugs": {
+    "url": "https://github.com/achievejia/session-title-summary/issues"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

@@ -11,7 +11,7 @@
 
 - insert:
     - id: session-title-summary
-      name: '@local/session-title-summary'
+      name: 'dsh-session-title-summary'
       config:
         # 每条人类消息后重新分析（all-prompts）或仅首条（first-prompt）
         cadence: all-prompts
