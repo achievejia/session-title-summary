@@ -29,7 +29,7 @@
     "@deepseek-ai/dsh-session-title": "0.2.1-rc.5",
     "@deepseek-ai/dsh-session-title-llm": "0.2.1-rc.5"
   },
-  "license": "MIT",
+  "license": "AGPL-3.0",
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
