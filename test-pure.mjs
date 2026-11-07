@@ -25,7 +25,7 @@ check('capText truncates', capText('长'.repeat(10000), 600).length <= 602);
 
 // ===== MMDD（Asia/Shanghai）
 check('mmdd Shanghai', mmdd(new Date('2026-10-04T04:00:00+08:00').getTime()) === '1004');
-check('mmdd cross-zone', mmdd(Date.UTC(2026, 9, 3, 20, 0), 'Asia/Shanghai') === '1004');
+check('mmdd cross-zone', mmdd(Date.UTC(2026, 9, 3, 20, 0), 'Asia/Shanghai') === '1004'); // UTC 10-03 20:00 = 上海 10-04 04:00
 check('mmdd UTC zone', mmdd(Date.UTC(2026, 9, 3, 20, 0), 'UTC') === '1003');
 
 // ===== 标题格式
@@ -92,9 +92,9 @@ const dir = mkdtempSync(join(tmpdir(), 'sts-store-'));
 const storePath = join(dir, 'categories.json');
 const store = new CategoryStore(storePath, ['系统', '开发', '部署']);
 check('store seeds custom', JSON.stringify(store.list()) === JSON.stringify(['系统', '开发', '部署']));
-store.recordUse('部署');
-store.recordUse('安全');
-store.recordUse('开发', '开发类');
+store.recordUse('部署');                     // seed 内：计数 +1
+store.recordUse('安全');                      // 新分类
+store.recordUse('开发', '开发类');            // 归并变体
 const raw = JSON.parse(readFileSync(storePath, 'utf8'));
 const by = (n) => raw.custom.find((e) => e.name === n);
 check('store persisted usage', by('部署').usage_count === 1 && by('安全').source === 'model' && by('安全').usage_count === 1);
@@ -126,12 +126,14 @@ check('backfill processes no title', !backfillSkipDecision(undefined, { header: 
   check('sleep aborts', (await p) === 'aborted');
 }
 
-// ===== package distribution contract: host supplies the DSH runtime
+// ===== package distribution contract: host supplies the DSH runtime =====
 {
   const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
   const core = ['@deepseek-ai/dsh-session', '@deepseek-ai/dsh-session-title', '@deepseek-ai/dsh-session-title-llm', '@deepseek-ai/schemastery'];
   check('core packages are not hard dependencies', core.every((name) => !(name in (pkg.dependencies ?? {}))));
   check('core packages are optional peers', core.every((name) => pkg.peerDependencies?.[name] === '*' && pkg.peerDependenciesMeta?.[name]?.optional === true));
+  const patch = readFileSync(new URL('./cordis.patch.yml', import.meta.url), 'utf8');
+  check('bundle guards missing host core services', patch.includes("disabled: !!js \"!ctx.get('sessionTitle') || !ctx.get('sessions')\""));
 }
 
 console.log(failed === 0 ? 'ALL PASS' : `${failed} FAILED`);
