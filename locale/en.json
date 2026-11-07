@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Session Summary Titles",
+    "description": "Generates a summary title from the conversation with the session's own model and renames the session automatically as it evolves."
+  }
+}

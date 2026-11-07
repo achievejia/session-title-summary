@@ -1,0 +1,92 @@
+# ctx.sessionTitle.register() is single-slot ("the sole optional title
+# provider"). The shipped experimental titles bundle registers
+# optional-session-title-all-prompts and disables the built-in first-prompt
+# row session-title-llm, so both must stay disabled for this provider to
+# register. Idempotent overrides: harmless when a row is already disabled.
+- id: optional-session-title-all-prompts
+  disabled: true
+
+- id: session-title-llm
+  disabled: true
+
+- insert:
+    - id: session-title-summary
+      name: '@local/session-title-summary'
+      config:
+        # 每条人类消息后重新分析（all-prompts）或仅首条（first-prompt）
+        cadence: all-prompts
+        # 标题格式：MMDD | 分类 | 主题；失败时回退 MMDD | 简短标题
+        datePrefix: true
+        timeZone: Asia/Shanghai
+        # 优先使用的内置分类
+        builtinCategories: [功能, 设计, 整改, 优化, 发布, 分析, 文档]
+        # 初始自定义分类（运行中模型引入的新分类会动态追加到
+        # ~/.dsh/session-title-summary/categories.json）
+        customCategories: [系统, 开发, 部署]
+        # 同义归并：模型说法 → 标准分类（先整词后包含匹配，按序生效）
+        synonyms:
+          - [系统部署, 发布]
+          - [部署工作, 发布]
+          - [上线, 发布]
+          - [代码开发, 功能]
+          - [问题修复, 整改]
+          - [bug修复, 整改]
+          - [bug 修复, 整改]
+          - [修bug, 整改]
+          - [性能提升, 优化]
+          - [性能优化, 优化]
+          - [方案调研, 分析]
+          - [页面设计, 设计]
+          - [接口说明整理, 文档]
+          - [开发类, 开发]
+          - [开发工作, 开发]
+        # 第一阶段本地快速判断：短首条消息命中关键词时跳过模型调用
+        localFastPath: true
+        fastPathKeywords:
+          - [部署, 发布]
+          - [上线, 发布]
+          - [发布, 发布]
+          - [修复, 整改]
+          - [fix, 整改]
+          - [bug, 整改]
+          - [报错, 整改]
+          - [崩溃, 整改]
+          - [优化, 优化]
+          - [重构, 优化]
+          - [提速, 优化]
+          - [设计, 设计]
+          - [UI, 设计]
+          - [界面, 设计]
+          - [原型, 设计]
+          - [文档, 文档]
+          - [README, 文档]
+          - [注释, 文档]
+          - [调研, 分析]
+          - [选型, 分析]
+          - [评估, 分析]
+          - [对比, 分析]
+        fastPathMaxChars: 60
+        # 置信度阈值：低于则回退两段式标题
+        minConfidence: 0.6
+        topicMaxChars: 24
+        # 长会话窗口：首 N 条 + 尾 M 条
+        windowFirst: 6
+        windowLast: 12
+        # none | suffix（suffix 在标题尾部追加「 · 模型id」）
+        modelTag: none
+        maxInputBytes: 8192
+        maxOutputTokens: 200
+        timeoutMs: 60000
+        # 历史会话回填：激活后一次性扫描持久化会话（新到旧，上限 50 个），
+        # 跳过：已存活会话 / 用户手动命名 / 已是合法格式 / 子代理会话 /
+        # 事件数 < backfillMinEvents；其余经同一标题管线重命名并写回日志
+        backfill: true
+        backfillMaxSessions: 50
+        backfillMinEvents: 3
+        backfillDelayMs: 800
+        backfillStartupDelayMs: 15000
+        backfillIncludeUserTitles: false
+        backfillIncludeSubagents: false
+        # 可选固定标题模型路由（provider 与 model 必须成对；缺省跟随会话模型）
+        # provider: deepseek
+        # model: deepseek-chat

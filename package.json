@@ -1,0 +1,43 @@
+{
+  "name": "@local/session-title-summary",
+  "description": "Summary session-title provider: renames the session with an LLM summary of the conversation, following the session's own model route",
+  "version": "1.7.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "pure.js",
+    "store.js",
+    "backfill.js",
+    "monitor.js",
+    "panel-api.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg"
+  ],
+  "dependencies": {
+    "@deepseek-ai/schemastery": "^3.18.4",
+    "@deepseek-ai/dsh-session": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-session-title": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-session-title-llm": "0.2.1-rc.5"
+  },
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": ["@deepseek-ai/dsh-client-ui-sidebar", "@deepseek-ai/dsh-client-ui-layout"]
+    }
+  }
+}
