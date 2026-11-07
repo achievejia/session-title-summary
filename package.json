@@ -1,7 +1,7 @@
 {
   "name": "dsh-session-title-summary",
-  "description": "Session-title provider for DeepSeek Harness: generates categorized MMDD | category | topic titles from the conversation, with history backfill and a management panel",
-  "version": "1.7.1",
+  "description": "Session-title provider for DeepSeek Harness: uses the host-provided DSH core packages, generates categorized MMDD | category | topic titles, backfills history, and provides a management panel",
+  "version": "1.7.2",
   "type": "module",
   "exports": {
     ".": "./index.js",
@@ -27,11 +27,17 @@
     "deepseek-harness",
     "session-title"
   ],
-  "dependencies": {
-    "@deepseek-ai/schemastery": "^3.18.4",
-    "@deepseek-ai/dsh-session": "0.2.1-rc.5",
-    "@deepseek-ai/dsh-session-title": "0.2.1-rc.5",
-    "@deepseek-ai/dsh-session-title-llm": "0.2.1-rc.5"
+  "peerDependencies": {
+    "@deepseek-ai/dsh-session": "*",
+    "@deepseek-ai/dsh-session-title": "*",
+    "@deepseek-ai/dsh-session-title-llm": "*",
+    "@deepseek-ai/schemastery": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-session": { "optional": true },
+    "@deepseek-ai/dsh-session-title": { "optional": true },
+    "@deepseek-ai/dsh-session-title-llm": { "optional": true },
+    "@deepseek-ai/schemastery": { "optional": true }
   },
   "license": "AGPL-3.0",
   "repository": {
