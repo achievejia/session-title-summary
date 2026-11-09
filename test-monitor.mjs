@@ -260,3 +260,45 @@ test('open live sessions with conforming titles are still skipped', async () => 
   assert.equal(report.skipped, 1);
   assert.equal(report.records[0].reason, 'valid-format');
 });
+
+test('skipped sessions do not consume the batch quota (no starvation)', async () => {
+  // 60 conforming (skipped) + 1 old nonconforming: the old one must still be processed.
+  const persisted = [];
+  for (let i = 0; i < 60; i++) persisted.push({ type: 'session/title', seq: 0, time: 1, data: { title: `1103 | 功能 | 合规${i}`, messageSeqs: [], source: { kind: 'provider' } } });
+  const stores = persisted.map((event, i) => ({ events: [event], header: { id: `ok${i}`, createdAt: 100 + i, origin: undefined } }));
+  const targetEvents = [{ type: 'session/title', seq: 0, time: 1, data: { title: '旧的不合规标题', messageSeqs: [], source: { kind: 'provider' } } }];
+  stores.push({ events: targetEvents, header: { id: 'old', createdAt: 1, origin: undefined } });
+  const open = async (id) => {
+    const store = stores.find((s) => s.header.id === id);
+    return { header: store.header, inheritedEventCount: 0,
+      read: async () => ({ events: [...store.events], eventState: 'detached' }),
+      append: async (batch) => { store.events.push(...batch); },
+      close: async () => {} };
+  };
+  const session = { id: 'old', header: { id: 'old', createdAt: 1 }, snapshotEvents: () => targetEvents, requestHeader: () => ({ config: { provider: 'p', model: 'm' } }) };
+  const ctx = {
+    sessions: { list: () => [], prepare: (id) => session, enter: () => () => {} },
+    sessionPersistence: { list: async () => stores.map((s) => ({ header: s.header, eventCount: s.events.length })), open },
+    sessionTitle: { refresh: async () => { targetEvents.push({ type: 'session/title', seq: 1, time: 2, data: { title: '1103 | 分析 | 已处理', source: { kind: 'provider' } } }); return { title: '1103 | 分析 | 已处理' }; } }
+  };
+  const report = await backfillHistoricalSessions(ctx, config, new AbortController().signal);
+  const target = report.records.find((r) => r.sessionId === 'old');
+  assert.equal(target.reason !== 'batch-limit' && target.status === 'renamed', true, `old session starved: ${JSON.stringify(target)}`);
+  assert.equal(report.renamed, 1);
+  const batchLimited = report.records.filter((r) => r.reason === 'batch-limit');
+  assert.equal(batchLimited.length, 0);
+});
+
+test('sessions missing session/created are skipped as malformed, not failed', async () => {
+  const events = [{ type: 'session/title', seq: 0, time: 1, data: { title: '导入会话', messageSeqs: [], source: { kind: 'provider' } } }];
+  const store = { events: [...events], header: { id: 'imp1', createdAt: 1 } };
+  const ctx = {
+    sessions: { list: () => [], prepare: (id, o) => { throw Object.assign(new Error('session "import-imp1" cannot append before session/created completes'), { code: 'ERR_SESSION_STATE' }); }, enter: () => () => {} },
+    sessionPersistence: { list: async () => [{ header: store.header, eventCount: 1 }], open: async () => ({ header: store.header, inheritedEventCount: 0, read: async () => ({ events: [...store.events], eventState: 'detached' }), append: async () => {}, close: async () => {} }) },
+    sessionTitle: { refresh: async () => ({ title: 'x' }) }
+  };
+  const report = await backfillHistoricalSessions(ctx, config, new AbortController().signal);
+  assert.equal(report.failed, 0);
+  assert.equal(report.records[0].status, 'skipped');
+  assert.equal(report.records[0].reason, 'malformed-session');
+});
