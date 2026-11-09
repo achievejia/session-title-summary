@@ -26,17 +26,21 @@ function notify(observer, method, value) {
 export async function backfillHistoricalSessions(ctx, resolved, signal, observer) {
   const snapshots = (await ctx.sessionPersistence.list()).sort((a, b) => b.header.createdAt - a.header.createdAt);
   const liveById = new Map(ctx.sessions.list().map((session) => [session.id, session]));
+  // Only header-level facts exclude here. The batch quota is consumed by
+  // sessions that actually get processed (model call or write): skipped ones
+  // (already conforming, subagent, too small) never consume quota, so an old
+  // nonconforming session cannot be starved by newer conforming sessions.
   let selected = 0;
   const inventory = snapshots.map((snapshot) => {
     let excluded = '';
     if (liveById.has(snapshot.header.id)) excluded = 'live-session';
     else if (snapshot.header.origin === 'subagent' && !resolved.backfillIncludeSubagents) excluded = 'subagent';
     else if (snapshot.eventCount !== undefined && snapshot.eventCount < resolved.backfillMinEvents) excluded = 'events-below-minimum';
-    else if (selected >= resolved.backfillMaxSessions) excluded = 'batch-limit';
     else selected++;
     return { snapshot, excluded };
   });
   const report = { discovered: snapshots.length, considered: selected, scanned: 0, renamed: 0, skipped: 0, failed: 0, titles: [], records: [] };
+  let processed = 0;
   notify(observer, 'onInventory', { discovered: report.discovered, considered: selected });
   for (const { snapshot, excluded } of inventory) {
     signal.throwIfAborted();
@@ -53,11 +57,15 @@ export async function backfillHistoricalSessions(ctx, resolved, signal, observer
       if (status === 'renamed') report.renamed++;
       else if (status === 'failed') report.failed++;
       else report.skipped++;
+      // Quota counts only real work: a rename, a failure, or a model run
+      // (unchanged / no-title-accepted). Pure skips stay free.
+      if (status === 'renamed' || status === 'failed' || extra.reason === 'unchanged' || extra.reason === 'no-title-accepted') processed++;
       const safe = safeRecord(record);
       report.records.push(safe);
       notify(observer, 'onProgress', { record: safe, report: { discovered: report.discovered, considered: report.considered, scanned: report.scanned, renamed: report.renamed, skipped: report.skipped, failed: report.failed } });
     };
     notify(observer, 'onStart', safeRecord(record));
+    if (!excluded && processed >= resolved.backfillMaxSessions) { finish('skipped', { reason: 'batch-limit' }); continue; }
     const liveSession = excluded === 'live-session' ? liveById.get(id) : undefined;
     if (liveSession) {
       // Open sessions are renamed through the LIVE refresh path: the owning
@@ -148,7 +156,8 @@ export async function backfillHistoricalSessions(ctx, resolved, signal, observer
       } finally { leave?.(); preparation[Symbol.dispose](); }
     } catch (error) {
       const message = safeDiagnostic(error?.message ?? error);
-      if (/already|owned|in use/i.test(message)) finish('skipped', { reason: 'session-in-use' });
+      if (/cannot append before session\/created/.test(message)) finish('skipped', { reason: 'malformed-session' });
+      else if (/already|owned|in use/i.test(message)) finish('skipped', { reason: 'session-in-use' });
       else finish('failed', { reason: signal.aborted ? 'cancelled' : message });
     } finally {
       try { await handle?.close(); } catch { /* Append determined the result already. */ }
