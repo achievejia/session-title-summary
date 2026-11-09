@@ -1,12 +1,12 @@
 // Browser half of @local/session-title-summary. Only React is a runtime import.
 window.__ModuleLoader__.load({
-	id: '@local/session-title-summary',
+	id: 'dsh-session-title-summary',
 	factory(require) {
 		const React = require('react');
 		const h = React.createElement;
 		const { useCallback, useEffect, useRef, useState } = React;
 		const PANEL_ID = 'session-title-summary';
-		const NS = '@local/session-title-summary';
+		const NS = 'dsh-session-title-summary';
 		const POLL_MS = 2000;
 		const REQUEST_TIMEOUT_MS = 15000;
 		const ACTIVE_STATES = ['scanning', 'generating', 'preparing-model', 'calling-model', 'persisting', 'running'];
