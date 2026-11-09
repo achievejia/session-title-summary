@@ -133,7 +133,7 @@ check('backfill processes no title', !backfillSkipDecision(undefined, { header: 
   check('core packages are not hard dependencies', core.every((name) => !(name in (pkg.dependencies ?? {}))));
   check('core packages are optional peers', core.every((name) => pkg.peerDependencies?.[name] === '*' && pkg.peerDependenciesMeta?.[name]?.optional === true));
   const patch = readFileSync(new URL('./cordis.patch.yml', import.meta.url), 'utf8');
-  check('bundle guards missing host core services', patch.includes("disabled: !!js \"!ctx.get('sessionTitle') || !ctx.get('sessions')\""));
+  check('bundle never disables its own client half', !patch.includes('disabled: !!js'));
 }
 
 console.log(failed === 0 ? 'ALL PASS' : `${failed} FAILED`);
