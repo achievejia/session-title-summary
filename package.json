@@ -1,7 +1,7 @@
 {
   "name": "dsh-session-title-summary",
   "description": "Session-title provider for DeepSeek Harness: uses the host-provided DSH core packages, generates categorized MMDD | category | topic titles, backfills history, and provides a management panel",
-  "version": "1.7.3",
+  "version": "1.7.4",
   "type": "module",
   "exports": {
     ".": "./index.js",
@@ -10,8 +10,23 @@
     "./icon": "./icon.svg",
     "./package.json": "./package.json"
   },
-  "files": ["index.js","pure.js","store.js","backfill.js","monitor.js","panel-api.js","client.js","cordis.patch.yml","locale/*.json","icon.svg"],
-  "keywords": ["dsh-plugin","deepseek-harness","session-title"],
+  "files": [
+    "index.js",
+    "pure.js",
+    "store.js",
+    "backfill.js",
+    "monitor.js",
+    "panel-api.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "session-title"
+  ],
   "peerDependencies": {
     "@deepseek-ai/dsh-session": "*",
     "@deepseek-ai/dsh-session-title": "*",
@@ -19,14 +34,39 @@
     "@deepseek-ai/schemastery": "*"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-session": {"optional": true},
-    "@deepseek-ai/dsh-session-title": {"optional": true},
-    "@deepseek-ai/dsh-session-title-llm": {"optional": true},
-    "@deepseek-ai/schemastery": {"optional": true}
+    "@deepseek-ai/dsh-session": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-session-title": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-session-title-llm": {
+      "optional": true
+    },
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    }
   },
   "license": "AGPL-3.0",
-  "repository": {"type":"git","url":"git+https://github.com/achievejia/session-title-summary.git"},
-  "homepage":"https://github.com/achievejia/session-title-summary#readme",
-  "bugs":{"url":"https://github.com/achievejia/session-title-summary/issues"},
-  "dsh":{"bundle":{"patch":"./cordis.patch.yml"},"client":{"platform":"web","immediately":true,"inject":["@deepseek-ai/dsh-client-ui-sidebar","@deepseek-ai/dsh-client-ui-layout"]}}
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/achievejia/session-title-summary.git"
+  },
+  "homepage": "https://github.com/achievejia/session-title-summary#readme",
+  "bugs": {
+    "url": "https://github.com/achievejia/session-title-summary/issues"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-layout"
+      ]
+    }
+  }
 }
