@@ -12,10 +12,6 @@
 - insert:
     - id: session-title-summary
       name: 'dsh-session-title-summary'
-      # If host core services are temporarily unavailable (for example during
-      # an interrupted install), defer this optional plugin instead of making
-      # the required host startup fatal. Loader re-evaluates this on remount.
-      disabled: !!js "!ctx.get('sessionTitle') || !ctx.get('sessions')"
       config:
         cadence: all-prompts
         datePrefix: true
